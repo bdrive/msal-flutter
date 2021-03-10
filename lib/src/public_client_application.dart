@@ -9,31 +9,31 @@ import 'msal_exception.dart';
 class PublicClientApplication {
   static const MethodChannel _channel = const MethodChannel('msal_flutter');
 
-  String _clientId, _authority;
+ late String _clientId, _authority;
 
   /// Create a new PublicClientApplication authenticating as the given [clientId],
   /// optionally against the selected [authority], defaulting to the common
-  PublicClientApplication(String clientId, {String authority}) {
+  PublicClientApplication({String? clientId, String? authority}) {
     throw Exception(
         "Direct call is no longer supported in v1.0, please use static method createPublicClientApplication");
   }
 
-  PublicClientApplication._create(String clientId, {String authority}) {
+  PublicClientApplication._create({required String clientId, required String authority}) {
     _clientId = clientId;
     _authority = authority;
   }
 
   static Future<PublicClientApplication> createPublicClientApplication(
-      String clientId,
-      {String authority}) async {
-    var res = PublicClientApplication._create(clientId, authority: authority);
+      {required String clientId,
+      required String authority}) async {
+    var res = PublicClientApplication._create(clientId: clientId, authority: authority);
     await res._initialize();
 
     return res;
   }
 
   /// Acquire a token interactively for the given [scopes]
-  Future<String> acquireToken(List<String> scopes) async {
+  Future<String> acquireToken({required List<String> scopes}) async {
     //create the arguments
     var res = <String, dynamic>{'scopes': scopes};
 
@@ -47,7 +47,7 @@ class PublicClientApplication {
   }
 
   /// Acquire a token silently, with no user interaction, for the given [scopes]
-  Future<String> acquireTokenSilent(List<String> scopes) async {
+  Future<String> acquireTokenSilent({required List<String> scopes}) async {
     //create the arguments
     var res = <String, dynamic>{'scopes': scopes};
 

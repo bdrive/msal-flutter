@@ -29,7 +29,6 @@ class MsalFlutterPlugin : MethodCallHandler {
 
         @JvmStatic
         fun registerWith(registrar: Registrar) {
-            // Log.d("MsalFlutter","Registering plugin")
             val channel = MethodChannel(registrar.messenger(), "msal_flutter")
             channel.setMethodCallHandler(MsalFlutterPlugin())
             mainActivity = registrar.activity()

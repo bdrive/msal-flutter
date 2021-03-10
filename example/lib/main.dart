@@ -22,16 +22,16 @@ class _MyAppState extends State<MyApp> {
     "https://graph.microsoft.com/Calendars.ReadWrite",
   ];
 
-  PublicClientApplication pca;
+   PublicClientApplication? pca;
 
   Future<void> _acquireToken() async{
     if(pca == null){
-      pca = await PublicClientApplication.createPublicClientApplication(_clientId, authority: _authority);
+      pca = await PublicClientApplication.createPublicClientApplication(clientId: _clientId, authority: _authority);
     }
 
     String res;
     try{
-      res = await pca.acquireToken(kScopes);
+      res = await pca!.acquireToken(scopes: kScopes);
     } on MsalUserCancelledException {
       res = "User cancelled";
     } on MsalNoAccountException {
@@ -51,13 +51,13 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _acquireTokenSilently() async {
     if(pca == null){
-      pca = await PublicClientApplication.createPublicClientApplication(_clientId, authority: _authority);
+      pca = await PublicClientApplication.createPublicClientApplication(clientId: _clientId, authority: _authority);
     }
     
     String res;
     try
     {
-      res = await pca.acquireTokenSilent(kScopes);
+      res = await pca!.acquireTokenSilent(scopes: kScopes);
     } on MsalUserCancelledException {
       res = "User cancelled";
     } on MsalNoAccountException {
@@ -78,13 +78,13 @@ class _MyAppState extends State<MyApp> {
   Future _logout() async {
     print("called logout");
     if(pca == null){
-      pca = await PublicClientApplication.createPublicClientApplication(_clientId, authority: _authority);
+      pca = await PublicClientApplication.createPublicClientApplication(clientId: _clientId, authority: _authority);
     }
 
     print("pca is not null");
     String res;
     try{
-      await pca.logout();
+      await pca!.logout();
       res = "Account removed";
     } on MsalException {
       res = "Error signing out";
@@ -108,11 +108,11 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: <Widget>[
-              RaisedButton( onPressed: _acquireToken, 
+              ElevatedButton(onPressed: _acquireToken,
                 child: Text('AcquireToken()'),),
-              RaisedButton( onPressed: _acquireTokenSilently,
+              ElevatedButton(onPressed: _acquireTokenSilently,
                 child: Text('AcquireTokenSilently()')),
-              RaisedButton( onPressed: _logout,
+              ElevatedButton(onPressed: _logout,
                 child: Text('Logout')),
               Text( _output),
             ],
