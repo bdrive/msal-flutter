@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'msal_exception.dart';
 
@@ -6,30 +9,31 @@ import 'msal_exception.dart';
 class PublicClientApplication {
   static const MethodChannel _channel = const MethodChannel('msal_flutter');
 
-  String _clientId, _authority;
+ late String _clientId, _authority;
 
   /// Create a new PublicClientApplication authenticating as the given [clientId],
   /// optionally against the selected [authority], defaulting to the common
-  PublicClientApplication(String clientId, {String authority}) {
+  PublicClientApplication({String? clientId, String? authority}) {
     throw Exception(
         "Direct call is no longer supported in v1.0, please use static method createPublicClientApplication");
   }
 
-  PublicClientApplication._create(String clientId, {String authority}) {
+  PublicClientApplication._create({required String clientId, required String authority}) {
     _clientId = clientId;
     _authority = authority;
   }
 
   static Future<PublicClientApplication> createPublicClientApplication(
-      String clientId,
-      {String authority}) async {
-    var res = PublicClientApplication._create(clientId, authority: authority);
+      {required String clientId,
+      required String authority}) async {
+    var res = PublicClientApplication._create(clientId: clientId, authority: authority);
     await res._initialize();
+
     return res;
   }
 
   /// Acquire a token interactively for the given [scopes]
-  Future<String> acquireToken(List<String> scopes) async {
+  Future<String> acquireToken({required List<String> scopes}) async {
     //create the arguments
     var res = <String, dynamic>{'scopes': scopes};
 
@@ -43,14 +47,16 @@ class PublicClientApplication {
   }
 
   /// Acquire a token silently, with no user interaction, for the given [scopes]
-  Future<String> acquireTokenSilent(List<String> scopes) async {
+  Future<String> acquireTokenSilent({required List<String> scopes}) async {
     //create the arguments
     var res = <String, dynamic>{'scopes': scopes};
 
     //call platform
     try {
-      final String token =
-          await _channel.invokeMethod('acquireTokenSilent', res);
+      if (Platform.isAndroid) {
+        await _channel.invokeMethod('loadAccounts');
+      }
+      final String token = await _channel.invokeMethod('acquireTokenSilent', res);
       return token;
     } on PlatformException catch (e) {
       throw _convertException(e);
@@ -59,6 +65,9 @@ class PublicClientApplication {
 
   Future logout() async {
     try {
+      if (Platform.isAndroid) {
+        await _channel.invokeMethod('loadAccounts');
+      }
       await _channel.invokeMethod('logout', <String, dynamic>{});
     } on PlatformException catch (e) {
       throw _convertException(e);
@@ -103,6 +112,7 @@ class PublicClientApplication {
     try {
       await _channel.invokeMethod('initialize', res);
     } on PlatformException catch (e) {
+      debugPrint("MSAL--> ${e.message} --> ${e.code}");
       throw _convertException(e);
     }
   }

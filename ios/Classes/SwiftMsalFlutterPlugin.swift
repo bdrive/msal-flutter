@@ -45,7 +45,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
         //nothing to do really
       }
       let viewController: UIViewController = UIApplication.shared.keyWindow!.rootViewController!
-      let webViewParameters = MSALWebviewParameters(parentViewController: viewController)
+      let webViewParameters = MSALWebviewParameters(authPresentationViewController: viewController)
       let interactiveParameters = MSALInteractiveTokenParameters(scopes: scopes, webviewParameters: webViewParameters)
       application.acquireToken(with: interactiveParameters, completionBlock: { (msalresult, error) in
         guard let authResult = msalresult, error == nil else {
@@ -140,7 +140,19 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     //create the application and return it
     if let application = try? MSALPublicClientApplication(configuration: config)
     {
-      application.validateAuthority = false
+        //application.validateAuthority = false
+        if let authorityURL = URL(string: SwiftMsalFlutterPlugin.authority){
+            do {
+                let b2cAuthority = try MSALAADAuthority(url: authorityURL)
+                application.configuration.knownAuthorities = [b2cAuthority]
+            } catch  {
+                print("ERRO knownAuthorities")
+            }
+           
+            
+        }
+        
+        
       return application
     }else{
       result(FlutterError(code: "CONFIG_ERROR", message: "Unable to create MSALPublicClientApplication", details: nil))

@@ -13,21 +13,25 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   
-  static const String _authority = "https://msalfluttertest.b2clogin.com/tfp/msalfluttertest.onmicrosoft.com/B2C_1_sisu";
-  static const String _clientId = "5913dfb1-7576-451c-a7ea-a7c5a3f8682a";
+  static const String _authority = "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize";
+  static const String _clientId = "xxxxxxxxxxxxxxxxxxxxx";
   
   String _output = 'NONE';
+  static const List<String> kScopes = [
+    "https://graph.microsoft.com/user.read",
+    "https://graph.microsoft.com/Calendars.ReadWrite",
+  ];
 
-  PublicClientApplication pca;
+   PublicClientApplication? pca;
 
   Future<void> _acquireToken() async{
     if(pca == null){
-      pca = await PublicClientApplication.createPublicClientApplication(_clientId, authority: _authority);
+      pca = await PublicClientApplication.createPublicClientApplication(clientId: _clientId, authority: _authority);
     }
 
     String res;
     try{
-      res = await pca.acquireToken(["https://msalfluttertest.onmicrosoft.com/msalbackend/user_impersonation"]);
+      res = await pca!.acquireToken(scopes: kScopes);
     } on MsalUserCancelledException {
       res = "User cancelled";
     } on MsalNoAccountException {
@@ -47,21 +51,21 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _acquireTokenSilently() async {
     if(pca == null){
-      pca = await PublicClientApplication.createPublicClientApplication(_clientId, authority: _authority);
+      pca = await PublicClientApplication.createPublicClientApplication(clientId: _clientId, authority: _authority);
     }
     
     String res;
     try
     {
-      res = await pca.acquireTokenSilent(["https://msalfluttertest.onmicrosoft.com/msalbackend/user_impersonation"]);
+      res = await pca!.acquireTokenSilent(scopes: kScopes);
     } on MsalUserCancelledException {
       res = "User cancelled";
     } on MsalNoAccountException {
       res = "no account";
     } on MsalInvalidConfigurationException {
       res = "invalid config";
-    } on MsalInvalidScopeException {
-      res = "Invalid scope";
+    } on MsalInvalidScopeException catch (e) {
+      res = "Invalid scope: ${e.errorMessage}";
     }on MsalException {
       res = "Error getting token silently!";
     }
@@ -74,13 +78,13 @@ class _MyAppState extends State<MyApp> {
   Future _logout() async {
     print("called logout");
     if(pca == null){
-      pca = await PublicClientApplication.createPublicClientApplication(_clientId, authority: _authority);
+      pca = await PublicClientApplication.createPublicClientApplication(clientId: _clientId, authority: _authority);
     }
 
     print("pca is not null");
     String res;
     try{
-      await pca.logout();
+      await pca!.logout();
       res = "Account removed";
     } on MsalException {
       res = "Error signing out";
@@ -104,11 +108,11 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: <Widget>[
-              RaisedButton( onPressed: _acquireToken, 
+              ElevatedButton(onPressed: _acquireToken,
                 child: Text('AcquireToken()'),),
-              RaisedButton( onPressed: _acquireTokenSilently,
+              ElevatedButton(onPressed: _acquireTokenSilently,
                 child: Text('AcquireTokenSilently()')),
-              RaisedButton( onPressed: _logout,
+              ElevatedButton(onPressed: _logout,
                 child: Text('Logout')),
               Text( _output),
             ],
