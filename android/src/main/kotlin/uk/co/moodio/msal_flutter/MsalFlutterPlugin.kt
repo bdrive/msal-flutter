@@ -23,7 +23,6 @@ class MsalFlutterPlugin : MethodCallHandler {
     companion object {
         lateinit var mainActivity: Activity
         lateinit var msalApp: IMultipleAccountPublicClientApplication
-        lateinit var accountList: List<IAccount>
 
         fun isClientInitialized() = ::msalApp.isInitialized
 
@@ -38,14 +37,23 @@ class MsalFlutterPlugin : MethodCallHandler {
 
             return object : AuthenticationCallback {
                 override fun onSuccess(authenticationResult: IAuthenticationResult) {
+
+                    var resultMap: HashMap<String, String> = hashMapOf(
+                        "accountId" to authenticationResult.account.id,
+                        "accessToken" to authenticationResult.accessToken)
+
                     Handler(Looper.getMainLooper()).post {
-                        result.success(authenticationResult.accessToken)
+                        result.success(resultMap)
                     }
                 }
 
                 override fun onError(exception: MsalException) {
                     Handler(Looper.getMainLooper()).post {
-                        result.error("AUTH_ERROR", "Authentication failed", exception.localizedMessage)
+                        result.error(
+                            "AUTH_ERROR",
+                            "Authentication failed",
+                            exception.localizedMessage
+                        )
                     }
                 }
 
@@ -108,13 +116,14 @@ class MsalFlutterPlugin : MethodCallHandler {
         val scopes: Array<String>? = scopesArg?.toTypedArray()
         val clientId: String? = call.argument("clientId")
         val authority: String? = call.argument("authority")
+        val accountId: String? = call.argument("accountId")
 
         when (call.method) {
-            "logout" -> Thread(Runnable { logout(result) }).start()
+            "logout" -> Thread(Runnable { logout(accountId, result) }).start()
             "initialize" -> initialize(clientId, authority, result)
             "loadAccounts" -> Thread(Runnable { loadAccounts(result) }).start()
             "acquireToken" -> Thread(Runnable { acquireToken(scopes, result) }).start()
-            "acquireTokenSilent" -> Thread(Runnable { acquireTokenSilent(scopes, result) }).start()
+            "acquireTokenSilent" -> Thread(Runnable { acquireTokenSilent(scopes, accountId, result) }).start()
             else -> result.notImplemented()
         }
 
@@ -134,16 +143,11 @@ class MsalFlutterPlugin : MethodCallHandler {
             return
         }
 
-        //remove old accounts
-        while (msalApp.accounts.any()) {
-            msalApp.removeAccount(msalApp.accounts.first())
-        }
-
         //acquire the token
         msalApp.acquireToken(mainActivity, scopes, getAuthCallback(result))
     }
 
-    private fun acquireTokenSilent(scopes: Array<String>?, result: Result) {
+    private fun acquireTokenSilent(scopes: Array<String>?, accountId: String?, result: Result) {
         // check if client has been initialized
 
         if (!isClientInitialized()) {
@@ -160,14 +164,22 @@ class MsalFlutterPlugin : MethodCallHandler {
             return
         }
 
-        //ensure accounts exist
-        if (accountList?.isEmpty()) {
+        if (accountId == null) {
             Handler(Looper.getMainLooper()).post {
-                result.error("NO_ACCOUNT", "No account is available to acquire token silently for", null)
+                result.error("NO_ACCOUNT_ID", "Call must include an accountId", null)
             }
             return
         }
-        val selectedAccount: IAccount = accountList.first();
+
+        //ensure accounts exist
+        if (!msalApp.accounts.any { account -> account.id == accountId }) {
+            Handler(Looper.getMainLooper()).post {
+                result.error("NO_ACCOUNT", "No account is available with the given accoundId", null)
+            }
+            return
+        }
+
+        val selectedAccount: IAccount = msalApp.accounts.first { account -> account.id == accountId };
         //acquire the token and return the result
         val sc = scopes.map { s -> s.toLowerCase() }.toTypedArray()
 
@@ -207,7 +219,6 @@ class MsalFlutterPlugin : MethodCallHandler {
         msalApp.getAccounts(object : LoadAccountsCallback {
 
             override fun onTaskCompleted(resultList: List<IAccount>) {
-                accountList = resultList
                 result.success(true)
             }
 
@@ -218,7 +229,7 @@ class MsalFlutterPlugin : MethodCallHandler {
     }
 
 
-    private fun logout(result: Result) {
+    private fun logout(accountId: String?, result: Result) {
         if(!isClientInitialized()){
             Handler(Looper.getMainLooper()).post {
                 result.error("NO_ACCOUNT", "No account is available to acquire token silently for", null)
@@ -226,14 +237,24 @@ class MsalFlutterPlugin : MethodCallHandler {
             return
         }
 
-        if (accountList?.isEmpty()) {
+        if (accountId == null) {
             Handler(Looper.getMainLooper()).post {
-                result.error("NO_ACCOUNT", "No account is available to acquire token silently for", null)
+                result.error("NO_ACCOUNT_ID", "Call must include an accountId", null)
             }
             return
         }
 
-        msalApp.removeAccount(accountList.first(), object : IMultipleAccountPublicClientApplication.RemoveAccountCallback{
+        //ensure accounts exist
+        if (!msalApp.accounts.any { account -> account.id == accountId }) {
+            Handler(Looper.getMainLooper()).post {
+                result.error("NO_ACCOUNT", "No account is available with the given accoundId", null)
+            }
+            return
+        }
+
+        val selectedAccount: IAccount = msalApp.accounts.first { account -> account.id == accountId };
+
+        msalApp.removeAccount(selectedAccount, object : IMultipleAccountPublicClientApplication.RemoveAccountCallback{
             override fun onRemoved() {
                 Thread(Runnable { loadAccounts(result) }).start()
             }
