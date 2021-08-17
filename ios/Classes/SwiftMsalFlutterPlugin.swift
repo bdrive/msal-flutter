@@ -54,9 +54,12 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
         }
         
         // Get access token from result
-        let accessToken = authResult.accessToken
+        let result = [
+          accessToken: authResult.accessToken,
+          accountId: authResult.account.identifier
+        ]
 
-        result(accessToken)
+        result(result)
       })
     }
     else {
