@@ -21,12 +21,13 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     let scopes = dict["scopes"] as? [String] ?? [String]()
     let clientId = dict["clientId"] as? String ?? ""
     let authority = dict["authority"] as? String ?? ""
+    let accountId = dict["accountId"] as? String ?? ""
 
     switch( call.method ){
       case "initialize": initialize(clientId: clientId, authority: authority, result: result)
       case "acquireToken": acquireToken(scopes: scopes, result: result)
-      case "acquireTokenSilent": acquireTokenSilent(scopes: scopes, result: result)
-      case "logout": logout(result: result)
+      case "acquireTokenSilent": acquireTokenSilent(scopes: scopes, accountId: accountId, result: result)
+      case "logout": logout(accountId: accountId, result: result)
       default: result(FlutterError(code:"INVALID_METHOD", message: "The method called is invalid", details: nil))
     } 
   }
@@ -67,7 +68,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  private func acquireTokenSilent(scopes: [String], result: @escaping FlutterResult)
+  private func acquireTokenSilent(scopes: [String], accountId: [String], result: @escaping FlutterResult)
   {
     if let application = getApplication(result: result){
       var account : MSALAccount!
@@ -181,7 +182,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     result(true)
   }
 
-  private func logout(result: @escaping FlutterResult)
+  private func logout(accountId: [String], result: @escaping FlutterResult)
   {
     if let application = getApplication(result: result){
       do{
