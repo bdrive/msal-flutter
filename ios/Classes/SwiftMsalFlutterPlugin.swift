@@ -54,12 +54,12 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
         }
         
         // Get access token from result
-        let result = [
-          accessToken: authResult.accessToken,
-          accountId: authResult.account.identifier
+        let resultDict = [
+          "accessToken": authResult.accessToken,
+          "accountId": authResult.account.identifier
         ]
 
-        result(result)
+        result(resultDict)
       })
     }
     else {
@@ -96,9 +96,14 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
         }
         
         // Get access token from result
-        let accessToken = authResult.accessToken
+        // Get access token from result
+        let resultDict = [
+          "accessToken": authResult.accessToken,
+          "accountId": authResult.account.identifier
+        ]
 
-        result(accessToken)
+        result(resultDict)
+
       })
     }
     else {
