@@ -79,6 +79,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
         account = cachedAccounts.first!
       } catch {
         result(FlutterError(code: "NO_ACCOUNT", message: "Error retrieving an existing account", details: nil))
+        return
       }
 
       let silentParameters = MSALSilentTokenParameters(scopes: scopes, account: account)
