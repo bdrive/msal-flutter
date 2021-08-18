@@ -68,7 +68,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  private func acquireTokenSilent(scopes: [String], accountId: [String], result: @escaping FlutterResult)
+  private func acquireTokenSilent(scopes: [String], accountId: String, result: @escaping FlutterResult)
   {
     if let application = getApplication(result: result){
       var account : MSALAccount!
@@ -182,7 +182,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     result(true)
   }
 
-  private func logout(accountId: [String], result: @escaping FlutterResult)
+  private func logout(accountId: String, result: @escaping FlutterResult)
   {
     if let application = getApplication(result: result){
       do{
