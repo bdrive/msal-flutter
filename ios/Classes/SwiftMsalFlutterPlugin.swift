@@ -63,23 +63,17 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  private func acquireTokenSilent(scopes: [String], accountId _: String, result: @escaping FlutterResult)
+  private func acquireTokenSilent(scopes: [String], accountId: String, result: @escaping FlutterResult)
   {
     if let application = getApplication(result: result) {
       var account: MSALAccount!
 
       do {
-        let cachedAccounts = try application.allAccounts()
-        if cachedAccounts.isEmpty {
+        account = try application.account(forIdentifier: accountId)
+      } catch let error as NSError {
           let error = FlutterError(code: "NO_ACCOUNT", message: "No account is available to acquire token silently for", details: nil)
           result(error)
           return
-        }
-        // set account as the first account
-        account = cachedAccounts.first!
-      } catch {
-        result(FlutterError(code: "NO_ACCOUNT", message: "Error retrieving an existing account", details: nil))
-        return
       }
 
       let silentParameters = MSALSilentTokenParameters(scopes: scopes, account: account)
@@ -166,7 +160,7 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     result(true)
   }
 
-  private func logout(accountId _: String, result: @escaping FlutterResult) {
+  private func logout(accountId: String, result: @escaping FlutterResult) {
     if let application = getApplication(result: result) {
       do {
         let cachedAccounts = try application.allAccounts()
