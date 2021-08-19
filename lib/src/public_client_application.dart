@@ -51,7 +51,7 @@ class PublicClientApplication {
   }
 
   /// Acquire a token silently, with no user interaction, for the given [scopes]
-  Future<String> acquireTokenSilent(
+  Future<Account> acquireTokenSilent(
       {required String accountId, required List<String> scopes}) async {
     //create the arguments
     var res = <String, dynamic>{'accountId': accountId, 'scopes': scopes};
@@ -61,9 +61,11 @@ class PublicClientApplication {
       if (Platform.isAndroid) {
         await _channel.invokeMethod('loadAccounts');
       }
-      final String token =
-          await _channel.invokeMethod('acquireTokenSilent', res);
-      return token;
+      final result = await _channel.invokeMethod('acquireTokenSilent', res);
+      return Account(
+        accountId: result['accountId'],
+        accessToken: result['accessToken'],
+      );
     } on PlatformException catch (e) {
       throw _convertException(e);
     }
