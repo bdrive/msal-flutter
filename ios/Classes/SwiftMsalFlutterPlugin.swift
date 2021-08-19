@@ -30,6 +30,26 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
+  //
+  // initialize
+  //
+  
+  private func initialize(clientId: String, authority: String, result: @escaping FlutterResult) {
+    // validate clientid exists
+    if clientId.isEmpty {
+      result(FlutterError(code: "NO_CLIENTID", message: "Call must include a clientId", details: nil))
+      return
+    }
+
+    SwiftMsalFlutterPlugin.clientId = clientId
+    SwiftMsalFlutterPlugin.authority = authority
+    result(true)
+  }
+
+  //
+  // acquireToken
+  //
+  
   private func acquireToken(scopes: [String], result: @escaping FlutterResult) {
     if let application = getApplication(result: result) {
       // delete old accounts
@@ -63,6 +83,10 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
+  //
+  // acquireTokenSilent
+  //
+  
   private func acquireTokenSilent(scopes: [String], accountId: String, result: @escaping FlutterResult)
   {
     if let application = getApplication(result: result) {
@@ -99,7 +123,40 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
+  //
+  // logout
+  //
+  
+  private func logout(accountId: String, result: @escaping FlutterResult) {
+    if let application = getApplication(result: result) {
+      do {
+        let cachedAccounts = try application.allAccounts()
+
+        if cachedAccounts.isEmpty {
+          result(true)
+          return
+        }
+
+        let account = cachedAccounts.first!
+        try application.remove(account)
+      } catch {
+        result(FlutterError(code: "CONFIG_ERROR", message: "Unable get remove accounts", details: nil))
+        return
+      }
+      result(true)
+      return
+    } else {
+      return
+    }
+  }
+}
+
+  //
+  // getApplication
+  //
+  
   private func getApplication(result: @escaping FlutterResult) -> MSALPublicClientApplication? {
+  
     if SwiftMsalFlutterPlugin.clientId.isEmpty {
       result(FlutterError(code: "NO_CLIENT", message: "Client must be initialized before attempting to acquire a token.", details: nil))
       return nil
@@ -147,39 +204,3 @@ public class SwiftMsalFlutterPlugin: NSObject, FlutterPlugin {
       return nil
     }
   }
-
-  private func initialize(clientId: String, authority: String, result: @escaping FlutterResult) {
-    // validate clientid exists
-    if clientId.isEmpty {
-      result(FlutterError(code: "NO_CLIENTID", message: "Call must include a clientId", details: nil))
-      return
-    }
-
-    SwiftMsalFlutterPlugin.clientId = clientId
-    SwiftMsalFlutterPlugin.authority = authority
-    result(true)
-  }
-
-  private func logout(accountId: String, result: @escaping FlutterResult) {
-    if let application = getApplication(result: result) {
-      do {
-        let cachedAccounts = try application.allAccounts()
-
-        if cachedAccounts.isEmpty {
-          result(true)
-          return
-        }
-
-        let account = cachedAccounts.first!
-        try application.remove(account)
-      } catch {
-        result(FlutterError(code: "CONFIG_ERROR", message: "Unable get remove accounts", details: nil))
-        return
-      }
-      result(true)
-      return
-    } else {
-      return
-    }
-  }
-}
