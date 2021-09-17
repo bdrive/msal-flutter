@@ -35,7 +35,7 @@ NOTE: Due to a [known kotlin issue kotlin](https://youtrack.jetbrains.com/issue/
 
 This section is mostly copied and modified from [the official android MSAL library github repository](https://github.com/AzureAD/microsoft-authentication-library-for-android). Visit the repository for more details and information on how to use it with authentication brokers.
 
-1. Give youyr app internet permissions
+1. Give your app internet permissions
 
 ```
 <uses-permission android:name="android.permission.INTERNET"/>
